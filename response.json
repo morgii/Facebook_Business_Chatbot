@@ -1,0 +1,8 @@
+[
+    {"patterns": ["dam koto", "price", "how much", "দাম"], "response": "The price is 500 BDT."},
+    {"patterns": ["product er dam", "product price"], "response": "This product costs 500 BDT."},
+    {"patterns": ["koto", "rate", "cost"], "response": "The cost is 500 BDT."},
+    {"patterns": ["hello", "hi", "hey"], "response": "Hello! How can I help you today?"},
+    {"patterns": ["thank you", "thanks", "ধন্যবাদ"], "response": "You're welcome!"},
+    {"patterns": ["delivery time", "kotokhon e delivery", "delivery kotodin e"], "response": "Delivery takes 3-5 business days."}
+]

@@ -1,6 +1,7 @@
 from flask import Flask, request
 import requests
 import difflib
+import json
 
 app = Flask(__name__)
 
@@ -11,37 +12,13 @@ VERIFY_TOKEN = "anystring"
 user_carts = {}
 user_phone_numbers = {}
 
-# Product data
-products = [
-    {
-        "title": "Minecraft Bundle",
-        "image_url": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Homepage_Discover-our-games_MC-Vanilla-KeyArt_864x864.jpg",
-        "price": 500,
-        "code": "DEMO1"
-    },
-    {
-        "title": "MCPE Personal",
-        "image_url": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Homepage_Discover-our-games_MC-Vanilla-KeyArt_864x864.jpg",
-        "price": 700,
-        "code": "DEMO2"
-    },
-    {
-        "title": "MCPE Family",
-        "image_url": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Homepage_Discover-our-games_MC-Vanilla-KeyArt_864x864.jpg",
-        "price": 900,
-        "code": "DEMO3"
-    }
-]
+# Load product data from JSON file
+with open('products.json', 'r', encoding='utf-8') as f:
+    products = json.load(f)
 
-# Response data for chatbot
-response_data = [
-    {"patterns": ["dam koto", "price", "how much", 'দাম'], "response": "The price is 500 BDT."},
-    {"patterns": ["product er dam", "product price"], "response": "This product costs 500 BDT."},
-    {"patterns": ["koto", "rate", "cost"], "response": "The cost is 500 BDT."},
-    {"patterns": ["hello", "hi", "hey"], "response": "Hello! How can I help you today?"},
-    {"patterns": ["thank you", "thanks"], "response": "You're welcome!"},
-    {"patterns": ["delivery time", "kotokhon e delivery", "delivery kotodin e"], "response": "Delivery takes 3-5 business days."},
-]
+# Load response data from JSON file
+with open('response.json', 'r', encoding='utf-8') as f:
+    response_data = json.load(f)
 
 # Helper functions
 def send_message(recipient_id, message):
