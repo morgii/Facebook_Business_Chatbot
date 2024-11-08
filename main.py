@@ -118,6 +118,7 @@ def finalize_order(recipient_id):
         "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nThank you for your purchase!"
     })
 
+
 @app.route('/', methods=['GET', 'POST'])
 def webhook():
     if request.method == 'GET':

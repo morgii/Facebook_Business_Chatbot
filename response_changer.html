@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Response Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .navbar-dark-mode {
+            background-color: #333;
+        }
+        .logo {
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-dark-mode">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="logo.png" alt="Logo" class="logo">
+                Chatbot Manager
+            </a>
+            <button class="btn btn-outline-light" id="darkModeToggle">🌙 Dark Mode</button>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Chatbot Response Manager</h1>
+
+        <!-- File Upload -->
+        <div class="mb-4">
+            <input type="file" id="jsonFileInput" class="form-control" accept=".json">
+        </div>
+
+        <!-- Add/Edit Response Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 id="formTitle" class="card-title">Add New Response</h5>
+                <form id="responseForm">
+                    <input type="hidden" id="editIndex" value="">
+                    <div class="mb-3">
+                        <label for="patterns" class="form-label">Patterns (comma separated)</label>
+                        <input type="text" id="patterns" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="response" class="form-label">Response</label>
+                        <textarea id="response" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" id="cancelEdit">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Response Table -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Manage Responses</h5>
+                <table class="table table-striped table-dark">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Patterns</th>
+                            <th>Response</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="responseTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <button class="btn btn-success mt-4" id="saveButton">Save Changes</button>
+    </div>
+
+    <script>
+        let responses = [];
+        let fileName = '';
+
+        // Dark Mode Toggle
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+
+        // Load JSON file
+        document.getElementById('jsonFileInput').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                fileName = file.name;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        responses = JSON.parse(e.target.result);
+                        renderTable();
+                    } catch (error) {
+                        alert('Invalid JSON file');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Render the response table
+        function renderTable() {
+            const tableBody = document.getElementById('responseTable');
+            tableBody.innerHTML = '';
+            responses.forEach((item, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.patterns.join(', ')}</td>
+                        <td>${item.response}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick="editResponse(${index})">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteResponse(${index})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Add or Edit response
+        document.getElementById('responseForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const patterns = document.getElementById('patterns').value.split(',').map(item => item.trim());
+            const response = document.getElementById('response').value;
+            const editIndex = document.getElementById('editIndex').value;
+
+            if (editIndex === '') {
+                responses.push({ patterns, response });
+            } else {
+                responses[editIndex] = { patterns, response };
+            }
+
+            renderTable();
+            this.reset();
+            document.getElementById('editIndex').value = '';
+            document.getElementById('formTitle').textContent = 'Add New Response';
+        });
+
+        // Edit response
+        function editResponse(index) {
+            const item = responses[index];
+            document.getElementById('patterns').value = item.patterns.join(', ');
+            document.getElementById('response').value = item.response;
+            document.getElementById('editIndex').value = index;
+            document.getElementById('formTitle').textContent = 'Edit Response';
+        }
+
+        // Delete response
+        function deleteResponse(index) {
+            if (confirm('Are you sure you want to delete this response?')) {
+                responses.splice(index, 1);
+                renderTable();
+            }
+        }
+
+        // Save changes to the JSON file
+        document.getElementById('saveButton').addEventListener('click', async () => {
+            if (!fileName) {
+                alert('No file loaded. Please upload a JSON file first.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5300/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName, data: responses })
+                });
+
+                const result = await response.json();
+                alert(result.message);
+            } catch (error) {
+                alert(`Failed to connect to the server: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>
