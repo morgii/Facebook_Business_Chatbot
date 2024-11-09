@@ -2,19 +2,25 @@
     {
         "title": "Minecraft Bundle",
         "image_url": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Homepage_Discover-our-games_MC-Vanilla-KeyArt_864x864.jpg",
+        "web_url": "https://www.example.com",
         "price": 500,
-        "code": "DEMO1"
+        "code": "DEMO1",
+        "details": "Includes Minecraft Java Edition and Bedrock Edition."
     },
     {
         "title": "MCPE Personal",
         "image_url": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Homepage_Discover-our-games_MC-Vanilla-KeyArt_864x864.jpg",
+        "web_url": "https://www.example.com",
         "price": 700,
-        "code": "DEMO2"
+        "code": "DEMO2",
+        "details": "Personal edition for individual use with cross-platform play."
     },
     {
         "title": "MCPE Family",
         "image_url": "https://www.minecraft.net/content/dam/minecraftnet/games/minecraft/key-art/Homepage_Discover-our-games_MC-Vanilla-KeyArt_864x864.jpg",
+        "web_url": "https://www.example.com",
         "price": 900,
-        "code": "DEMO3"
+        "code": "DEMO3",
+        "details": "Family edition for up to 5 users, perfect for shared play."
     }
 ]

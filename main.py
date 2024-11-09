@@ -56,11 +56,11 @@ def display_products(recipient_id):
         element = {
             "title": product["title"],
             "image_url": product["image_url"],
-            "subtitle": f"Price: {product['price']} BDT",
+            "subtitle": f"Price: {product['price']} BDT\n{product['details']}",
             "buttons": [
                 {"type": "postback", "title": "Add to Cart", "payload": f"ADD_TO_CART_{product['code']}"},
-                {"type": "postback", "title": "View Cart", "payload": "VIEW_CART"},
-                {"type": "postback", "title": "Checkout", "payload": "CHECKOUT"}
+                {"type": "postback", "title": "Details", "payload": f"DETAILS_{product['code']}"},
+                {"type": "web_url", "title": "View on Web", "url": product["web_url"]}
             ]
         }
         elements.append(element)
@@ -95,7 +95,7 @@ def add_to_cart(recipient_id, code):
     send_button_message(recipient_id, "What would you like to do next?", [
         {"type": "postback", "title": "View Cart", "payload": "VIEW_CART"},
         {"type": "postback", "title": "Checkout", "payload": "CHECKOUT"},
-        {"type": "postback", "title": "Back to Products", "payload": "VIEW_PRODUCTS"}
+        {"type": "postback", "title": "Continue Shopping", "payload": "VIEW_PRODUCTS"}
     ])
 
 def view_cart(recipient_id):
@@ -117,7 +117,6 @@ def finalize_order(recipient_id):
     send_message(recipient_id, {
         "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nThank you for your purchase!"
     })
-
 
 @app.route('/', methods=['GET', 'POST'])
 def webhook():
@@ -154,6 +153,11 @@ def webhook():
                 elif payload.startswith("ADD_TO_CART_"):
                     product_code = payload.split("_")[-1]
                     add_to_cart(sender_id, product_code)
+                elif payload.startswith("DETAILS_"):
+                    product_code = payload.split("_")[-1]
+                    product = next((item for item in products if item["code"] == product_code), None)
+                    if product:
+                        send_message(sender_id, {"text": f"{product['title']} Details:\n{product['details']}"})
                 elif payload == "VIEW_CART":
                     view_cart(sender_id)
                 elif payload == "CHECKOUT":
