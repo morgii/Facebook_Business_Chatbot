@@ -108,20 +108,59 @@ def view_cart(recipient_id):
     total_price = sum(item['price'] for item in user_carts[recipient_id])
     send_message(recipient_id, {"text": f"Your Cart:\n{cart_items}\nTotal Price: {total_price} BDT"})
 
+
+user_selected_payment_method = {}  # Dictionary to track selected payment methods (Bkash/Nagad)
+
+def handle_payment_method(recipient_id, method):
+    if method == "PAYMENT_BKASH":
+        # Store that the user selected Bkash
+        user_selected_payment_method[recipient_id] = "Bkash"
+        send_message(recipient_id, {"text": "Please pay the advance payment via Bkash. You can pay using this link:\n\nhttps://shop.bkash.com/ma-babar-dowa-gaming-ghor01601/paymentlink/default-payment"})
+        send_message(recipient_id, {"text": "After making the payment, please provide your phone number to finalize the order."})
+
+    elif method == "PAYMENT_NAGAD":
+        # Store that the user selected Nagad
+        user_selected_payment_method[recipient_id] = "Nagad"
+        send_message(recipient_id, {"text": "Please pay the advance payment via Nagad. The payment number is: 0177906626"})
+        send_message(recipient_id, {"text": "After making the payment, please provide your phone number to finalize the order."})
+
+
+
 def checkout(recipient_id):
-    send_button_message(recipient_id, "Please choose your payment method:", [
-        {"type": "postback", "title": "Cash on Delivery", "payload": "PAYMENT_COD"},
-        {"type": "postback", "title": "Advanced Payment", "payload": "PAYMENT_ADVANCED"}
-    ])
+    # First ask for payment method if not set
+    if recipient_id not in user_payment_methods:
+        send_button_message(recipient_id, "Please choose your payment method:", [
+            {"type": "postback", "title": "Bkash", "payload": "PAYMENT_BKASH"},
+            {"type": "postback", "title": "Nagad", "payload": "PAYMENT_NAGAD"},
+            {"type": "postback", "title": "Cash on Delivery", "payload": "PAYMENT_COD"}
+        ])
+    else:
+        if user_payment_methods[recipient_id] == "Cash on Delivery":
+            send_message(recipient_id, {"text": "Please provide your phone number to confirm the order."})
+        else:
+            # Ask for phone number after payment method selection
+            send_message(recipient_id, {"text": "Please provide your phone number to finalize the order."})
 
 
 def finalize_order(recipient_id):
     phone_number = user_phone_numbers.get(recipient_id, "Unknown")
     payment_method = user_payment_methods.get(recipient_id, "Unknown")
+
+    # If the user chose advanced payment, check which method was selected (Bkash or Nagad)
+    if payment_method == "Advanced Payment":
+        payment_method = user_selected_payment_method.get(recipient_id, "Unknown")
+        if payment_method == "Unknown":
+            payment_method = "Not specified"  # If no method was selected, say "Not specified"
+
+    elif payment_method == "Cash on Delivery":
+        payment_method = "COD"
+
     cart_summary = "\n".join([f"{item['title']}: {item['price']} BDT" for item in user_carts[recipient_id]])
     total_price = sum(item['price'] for item in user_carts[recipient_id])
+
+    # Finalize order and provide order summary with actual payment method
     send_message(recipient_id, {
-        "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nPayment Method: {payment_method}\nThank you for your purchase!"
+        "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nPayment Method: {payment_method}\nThank you for your purchase! Your order has been confirmed!"
     })
 
 
@@ -142,12 +181,13 @@ def webhook():
             if 'message' in messaging_event:
                 message_text = messaging_event['message'].get('text', '').lower()
                 if message_text.isdigit() and len(message_text) == 11:
+                    # Save the phone number
                     user_phone_numbers[sender_id] = message_text
-                    finalize_order(sender_id)
+                    finalize_order(sender_id)  # Finalize the order
                 elif message_text == "start":
-                    display_products(sender_id)
+                    display_products(sender_id)  # Display products when "start" is sent
                 else:
-                    response = find_best_response(message_text)
+                    response = find_best_response(message_text)  # Find and send best match for the message
                     if response:
                         send_message(sender_id, {"text": response})
                     else:
@@ -155,31 +195,33 @@ def webhook():
 
             if 'postback' in messaging_event:
                 payload = messaging_event['postback']['payload']
+
+                # Handle various postback actions
                 if payload == "VIEW_PRODUCTS":
-                    display_products(sender_id)
+                    display_products(sender_id)  # Show products
                 elif payload.startswith("ADD_TO_CART_"):
                     product_code = payload.split("_")[-1]
-                    add_to_cart(sender_id, product_code)
+                    add_to_cart(sender_id, product_code)  # Add product to cart
                 elif payload.startswith("DETAILS_"):
                     product_code = payload.split("_")[-1]
                     product = next((item for item in products if item["code"] == product_code), None)
                     if product:
                         send_message(sender_id, {"text": f"{product['title']} Details:\n{product['details']}"})
                 elif payload == "VIEW_CART":
-                    view_cart(sender_id)
+                    view_cart(sender_id)  # View cart
                 elif payload == "CHECKOUT":
-                    checkout(sender_id)
+                    checkout(sender_id)  # Start checkout process
                 elif payload == "PAYMENT_COD":
-                    # Store Cash on Delivery payment method
-                    user_payment_methods[sender_id] = "Cash on Delivery"
-                    send_message(sender_id, {"text": "Please provide your phone number to proceed with checkout."})
-                elif payload == "PAYMENT_ADVANCED":
-                    # Store Advanced Payment method
-                    user_payment_methods[sender_id] = "Advanced Payment"
-                    send_message(sender_id, {"text": "Please provide your phone number to proceed with checkout."})
+                    user_payment_methods[sender_id] = "Cash on Delivery"  # Store payment method
+                    checkout(sender_id)  # Proceed to checkout after setting payment method
+                elif payload == "PAYMENT_BKASH":
+                    user_payment_methods[sender_id] = "Advanced Payment"  # Store advanced payment method
+                    handle_payment_method(sender_id, "PAYMENT_BKASH")  # Handle Bkash payment
+                elif payload == "PAYMENT_NAGAD":
+                    user_payment_methods[sender_id] = "Advanced Payment"  # Store advanced payment method
+                    handle_payment_method(sender_id, "PAYMENT_NAGAD")  # Handle Nagad payment
 
     return "Message processed", 200
-
 
 if __name__ == '__main__':
     app.run(port=2020)
