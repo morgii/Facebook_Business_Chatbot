@@ -13,11 +13,11 @@ user_carts = {}
 user_phone_numbers = {}
 
 # Load product data from JSON file
-with open('products.json', 'r', encoding='utf-8') as f:
+with open('data\\products.json', 'r', encoding='utf-8') as f:
     products = json.load(f)
 
 # Load response data from JSON file
-with open('response.json', 'r', encoding='utf-8') as f:
+with open('data\\responses.json', 'r', encoding='utf-8') as f:
     response_data = json.load(f)
 
 # Helper functions

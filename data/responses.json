@@ -254,5 +254,11 @@
       "আপনার এলাকা ডেলিভারি?"
     ],
     "response": "আমরা সারা দেশে ডেলিভারি করি। আপনার এলাকা ডেলিভারি সাপোর্ট করে কিনা জানার জন্য চ্যাটে 'Start' লিখুন। \nWe deliver nationwide. To check if your area is supported, type 'Start' in the chat."
+  },
+  {
+    "patterns": [
+      "GTA"
+    ],
+    "response": "ache ache"
   }
 ]
