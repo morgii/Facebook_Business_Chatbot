@@ -10,6 +10,7 @@ API = f"https://graph.facebook.com/v16.0/me/messages?access_token={PAGE_ACCESS_T
 VERIFY_TOKEN = "anystring"
 
 user_carts = {}
+user_payment_methods = {}
 user_phone_numbers = {}
 
 # Load product data from JSON file
@@ -108,15 +109,21 @@ def view_cart(recipient_id):
     send_message(recipient_id, {"text": f"Your Cart:\n{cart_items}\nTotal Price: {total_price} BDT"})
 
 def checkout(recipient_id):
-    send_message(recipient_id, {"text": "Please provide your phone number to proceed with checkout."})
+    send_button_message(recipient_id, "Please choose your payment method:", [
+        {"type": "postback", "title": "Cash on Delivery", "payload": "PAYMENT_COD"},
+        {"type": "postback", "title": "Advanced Payment", "payload": "PAYMENT_ADVANCED"}
+    ])
+
 
 def finalize_order(recipient_id):
     phone_number = user_phone_numbers.get(recipient_id, "Unknown")
+    payment_method = user_payment_methods.get(recipient_id, "Unknown")
     cart_summary = "\n".join([f"{item['title']}: {item['price']} BDT" for item in user_carts[recipient_id]])
     total_price = sum(item['price'] for item in user_carts[recipient_id])
     send_message(recipient_id, {
-        "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nThank you for your purchase!"
+        "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nPayment Method: {payment_method}\nThank you for your purchase!"
     })
+
 
 @app.route('/', methods=['GET', 'POST'])
 def webhook():
@@ -162,8 +169,17 @@ def webhook():
                     view_cart(sender_id)
                 elif payload == "CHECKOUT":
                     checkout(sender_id)
+                elif payload == "PAYMENT_COD":
+                    # Store Cash on Delivery payment method
+                    user_payment_methods[sender_id] = "Cash on Delivery"
+                    send_message(sender_id, {"text": "Please provide your phone number to proceed with checkout."})
+                elif payload == "PAYMENT_ADVANCED":
+                    # Store Advanced Payment method
+                    user_payment_methods[sender_id] = "Advanced Payment"
+                    send_message(sender_id, {"text": "Please provide your phone number to proceed with checkout."})
 
     return "Message processed", 200
+
 
 if __name__ == '__main__':
     app.run(port=2020)
