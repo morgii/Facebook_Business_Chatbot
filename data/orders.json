@@ -1,0 +1,32 @@
+[
+  {
+    "customer_id": "8444781382300594",
+    "customer_name": "Hitoshi Nakamoto",
+    "phone_number": "01779066926",
+    "payment_method": "Bkash",
+    "cart_items": [
+      {
+        "title": "Minecraft Bundle",
+        "price": 500
+      },
+      {
+        "title": "GTA FIVE",
+        "price": 2500
+      }
+    ],
+    "total_price": 3000
+  },
+  {
+    "customer_id": "8444781382300594",
+    "customer_name": "Hitoshi Nakamoto",
+    "phone_number": "01779066926",
+    "payment_method": "Cash on Delivery",
+    "cart_items": [
+      {
+        "title": "GTA FIVE",
+        "price": 2500
+      }
+    ],
+    "total_price": 2500
+  }
+]

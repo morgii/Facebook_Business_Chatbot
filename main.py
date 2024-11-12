@@ -2,6 +2,9 @@ from flask import Flask, request
 import requests
 import difflib
 import json
+import os
+
+
 
 app = Flask(__name__)
 
@@ -12,6 +15,9 @@ VERIFY_TOKEN = "anystring"
 user_carts = {}
 user_payment_methods = {}
 user_phone_numbers = {}
+ORDERS_FILE = 'data\\orders.json'
+
+
 
 # Load product data from JSON file
 with open('data\\products.json', 'r', encoding='utf-8') as f:
@@ -20,6 +26,30 @@ with open('data\\products.json', 'r', encoding='utf-8') as f:
 # Load response data from JSON file
 with open('data\\responses.json', 'r', encoding='utf-8') as f:
     response_data = json.load(f)
+
+
+
+def save_json(file_name, data):
+    try:
+        with open(file_name, 'w', encoding='utf-8') as file:
+            json.dump(data, file, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Error saving file: {str(e)}")
+
+# Helper function to load JSON data
+def load_json(file_name):
+    if os.path.exists(file_name):
+        try:
+            with open(file_name, 'r', encoding='utf-8') as file:
+                return json.load(file)
+        except Exception as e:
+            print(f"Error loading file: {str(e)}")
+    return []
+
+
+
+
+
 
 # Helper functions
 def send_message(recipient_id, message):
@@ -142,26 +172,91 @@ def checkout(recipient_id):
             send_message(recipient_id, {"text": "Please provide your phone number to finalize the order."})
 
 
+def get_user_name(user_id):
+    url = f"https://graph.facebook.com/{user_id}?fields=first_name,last_name&access_token={PAGE_ACCESS_TOKEN}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        first_name = data.get('first_name', '')
+        last_name = data.get('last_name', '')
+        return f"{first_name} {last_name}".strip()
+    return "Unknown User"
+
+
+
+
+
 def finalize_order(recipient_id):
     phone_number = user_phone_numbers.get(recipient_id, "Unknown")
     payment_method = user_payment_methods.get(recipient_id, "Unknown")
 
-    # If the user chose advanced payment, check which method was selected (Bkash or Nagad)
+    # Check for advanced payment methods (Bkash or Nagad)
     if payment_method == "Advanced Payment":
         payment_method = user_selected_payment_method.get(recipient_id, "Unknown")
-        if payment_method == "Unknown":
-            payment_method = "Not specified"  # If no method was selected, say "Not specified"
 
-    elif payment_method == "Cash on Delivery":
-        payment_method = "COD"
+    cart_items = [{"title": item['title'], "price": item['price']} for item in user_carts.get(recipient_id, [])]
+    total_price = sum(item['price'] for item in user_carts.get(recipient_id, []))
+    customer_name = get_user_name(recipient_id)
 
-    cart_summary = "\n".join([f"{item['title']}: {item['price']} BDT" for item in user_carts[recipient_id]])
-    total_price = sum(item['price'] for item in user_carts[recipient_id])
-
-    # Finalize order and provide order summary with actual payment method
+    # Order summary message
+    cart_summary = "\n".join([f"{item['title']}: {item['price']} BDT" for item in user_carts.get(recipient_id)])
     send_message(recipient_id, {
-        "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nPayment Method: {payment_method}\nThank you for your purchase! Your order has been confirmed!"
+        "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nPayment Method: {payment_method}\nThank you for your purchase, {customer_name}! Your order has been confirmed!"
     })
+
+    # Order data
+    order_data = {
+        "customer_id": recipient_id,
+        "customer_name": customer_name,
+        "phone_number": phone_number,
+        "payment_method": payment_method,
+        "cart_items": cart_items,
+        "total_price": total_price
+    }
+
+    # Load existing orders and append the new order
+    orders = load_json(ORDERS_FILE)
+    orders.append(order_data)
+
+    # Save updated orders
+    save_json(ORDERS_FILE, orders)
+    print(f"Order saved for user {recipient_id}")
+
+    # Reset payment method and cart data
+    user_payment_methods.pop(recipient_id, None)
+    user_selected_payment_method.pop(recipient_id, None)
+    user_phone_numbers.pop(recipient_id, None)
+    user_carts.pop(recipient_id, None)
+
+
+
+def save_order(recipient_id):
+    phone_number = user_phone_numbers.get(recipient_id, "Unknown")
+    payment_method = user_payment_methods.get(recipient_id, "Unknown")
+
+    # Check for advanced payment methods (Bkash or Nagad)
+    if payment_method == "Advanced Payment":
+        payment_method = user_selected_payment_method.get(recipient_id, "Unknown")
+
+    cart_items = [{"title": item['title'], "price": item['price']} for item in user_carts.get(recipient_id, [])]
+    total_price = sum(item['price'] for item in user_carts.get(recipient_id, []))
+
+    # Order data
+    order_data = {
+        "customer_id": recipient_id,
+        "phone_number": phone_number,
+        "payment_method": payment_method,
+        "cart_items": cart_items,
+        "total_price": total_price
+    }
+
+    # Load existing orders and append the new order
+    orders = load_json(ORDERS_FILE)
+    orders.append(order_data)
+
+    # Save updated orders
+    save_json(ORDERS_FILE, orders)
+    print(f"Order saved for user {recipient_id}")
 
 
 @app.route('/', methods=['GET', 'POST'])
