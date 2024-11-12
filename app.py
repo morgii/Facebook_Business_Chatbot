@@ -6,10 +6,18 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# Define the directory where JSON files will be stored
+DATA_DIRECTORY = os.path.join(os.getcwd(), 'data')
+
+# Create the directory if it doesn't exist
+if not os.path.exists(DATA_DIRECTORY):
+    os.makedirs(DATA_DIRECTORY)
+
 # Helper function to save JSON data
 def save_json(file_name, data):
+    file_path = os.path.join(DATA_DIRECTORY, file_name)
     try:
-        with open(file_name, 'w', encoding='utf-8') as file:
+        with open(file_path, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
         return {'message': 'File saved successfully!'}
     except Exception as e:
@@ -17,9 +25,10 @@ def save_json(file_name, data):
 
 # Helper function to load JSON data
 def load_json(file_name):
-    if os.path.exists(file_name):
+    file_path = os.path.join(DATA_DIRECTORY, file_name)
+    if os.path.exists(file_path):
         try:
-            with open(file_name, 'r', encoding='utf-8') as file:
+            with open(file_path, 'r', encoding='utf-8') as file:
                 data = json.load(file)
             return data
         except Exception as e:
