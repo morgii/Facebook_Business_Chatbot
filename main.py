@@ -3,6 +3,7 @@ import requests
 import difflib
 import json
 import os
+from datetime import datetime
 
 
 
@@ -231,9 +232,12 @@ def finalize_order(recipient_id):
         "text": f"Order Summary:\nInvoice No: {invoice_number}\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nPayment Method: {payment_method}\nThank you for your purchase, {customer_name}! Your order has been confirmed!"
     })
 
-    # Order data
+    # Get current date and time
+    order_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Updated order_data
     order_data = {
-        "invoice_number": invoice_number,  # Add invoice number here
+        "invoice_number": invoice_number,
         "customer_id": recipient_id,
         "customer_name": customer_name,
         "profile_pic": profile_pic,
@@ -241,7 +245,8 @@ def finalize_order(recipient_id):
         "payment_method": payment_method,
         "order_status": "pending",
         "cart_items": cart_items,
-        "total_price": total_price
+        "total_price": total_price,
+        "order_date": order_date  # Add order date and time
     }
 
     # Load existing orders and append the new order
