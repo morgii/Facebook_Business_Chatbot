@@ -98,9 +98,15 @@
     </div>
 
     <!-- Save Changes Button -->
+    <div class="flex justify-center mt-4">
+    <button class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700" onclick="exportToExcel()">Export to Excel</button>
+    </div>
+
+
     <div class="flex justify-center mt-8">
         <button class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700" id="saveButton">Save Changes</button>
     </div>
+
 </div>
 
 <script>
@@ -108,53 +114,56 @@
     let fileName = '';
 
     // Save Changes Button functionality
-document.getElementById('saveButton').addEventListener('click', function() {
-    // Send the updated orders to the backend
-    saveOrdersToBackend();
-});
-
-// Save orders to backend
-function saveOrdersToBackend() {
-    const fileName = 'orders.json';  // Set the file name to save
-    const orderData = orders;  // Get the updated orders
-
-    const data = {
-        fileName: fileName,
-        data: orderData
-    };
-
-    fetch('http://localhost:5300/save', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.message === 'File saved successfully!') {
-            alert('Orders saved successfully!');
-        } else {
-            alert('Error saving orders: ' + result.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to save orders!');
+    document.getElementById('saveButton').addEventListener('click', function() {
+        saveOrdersToBackend();
     });
-}
 
+    // Save orders to backend
+    function saveOrdersToBackend() {
+        const fileName = 'orders.json';  // Set the file name to save
+        const orderData = orders;  // Get the updated orders
+
+        const data = {
+            fileName: fileName,
+            data: orderData
+        };
+
+        fetch('http://localhost:5300/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.message === 'File saved successfully!') {
+                alert('Orders saved successfully!');
+            } else {
+                alert('Error saving orders: ' + result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to save orders!');
+        });
+    }
 
     // Load JSON file
-    document.getElementById('jsonFileInput').addEventListener('change', function (event) {
+    document.getElementById('jsonFileInput').addEventListener('change', function(event) {
         const file = event.target.files[0];
         if (file) {
             fileName = file.name;
             const reader = new FileReader();
-            reader.onload = function (e) {
+            reader.onload = function(e) {
                 try {
-                    orders = JSON.parse(e.target.result);
-                    renderTable();
+                    const parsedData = JSON.parse(e.target.result);
+                    if (Array.isArray(parsedData)) {
+                        orders = parsedData;
+                        renderTable();
+                    } else {
+                        alert('Invalid JSON format: Expected an array of orders.');
+                    }
                 } catch (error) {
                     alert('Invalid JSON file');
                 }
@@ -212,6 +221,7 @@ function saveOrdersToBackend() {
         const newStatus = document.getElementById(`statusSelect_${index}`).value;
         orders[index].order_status = newStatus;
         alert(`Order ${orders[index].invoice_number} status updated to: ${newStatus}`);
+        saveOrdersToBackend();
     }
 
     // Delete order
@@ -220,6 +230,7 @@ function saveOrdersToBackend() {
         if (confirm(`Are you sure you want to delete order ${invoiceNumber}?`)) {
             orders.splice(index, 1);
             renderTable();
+            saveOrdersToBackend();
         }
     }
 
@@ -227,6 +238,11 @@ function saveOrdersToBackend() {
     function searchOrder() {
         const query = document.getElementById('searchInput').value.toLowerCase();
         const category = document.getElementById('searchCategory').value;
+
+        if (query === '') {
+            renderTable();
+            return;
+        }
 
         const filteredOrders = orders.filter(order => {
             if (category === 'invoice') {
@@ -258,34 +274,43 @@ function saveOrdersToBackend() {
                         </div>
                     </td>
                     <td class="py-3 px-4">${order.order_date}</td>
-                    <td class="py-3 px-4">
-                        <select class="form-select block w-full py-2 px-3 bg-white border border-gray-300 rounded-lg focus:outline-none" id="statusSelect_${index}">
-                            <option value="pending" ${order.order_status === 'pending' ? 'selected' : ''}>Pending</option>
-                            <option value="processing" ${order.order_status === 'processing' ? 'selected' : ''}>Processing</option>
-                            <option value="completed" ${order.order_status === 'completed' ? 'selected' : ''}>Completed</option>
-                            <option value="on-hold" ${order.order_status === 'on-hold' ? 'selected' : ''}>On Hold</option>
-                            <option value="cancelled" ${order.order_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
-                            <option value="refunded" ${order.order_status === 'refunded' ? 'selected' : ''}>Refunded</option>
-                            <option value="failed" ${order.order_status === 'failed' ? 'selected' : ''}>Failed</option>
-                        </select>
-                    </td>
+                    <td class="py-3 px-4">${order.order_status}</td>
                     <td class="py-3 px-4 text-sm">${order.payment_method}</td>
                     <td class="py-3 px-4">
                         <ul class="list-none space-y-2">
                             ${order.cart_items.map(item => `<li>${item.title} - ${item.price} BDT</li>`).join('')}
-                            ${order.cart_items.map(item => `<li>${item.title} - ${item.price} BDT</li>`).join('')}
                         </ul>
                     </td>
                     <td class="py-3 px-4 text-sm">${order.total_price} BDT</td>
-                    <td class="py-3 px-4">
-                        <button class="bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700" onclick="updateOrder(${index})">Update</button>
-                        <button class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 mt-2" onclick="deleteOrder(${index})">Delete</button>
-                    </td>
                 </tr>
             `;
             tableBody.insertAdjacentHTML('beforeend', row);
         });
     }
+
+    // Export to Excel without direct download
+function exportToExcel() {
+    fetch('http://localhost:5300/export-excel?fileName=orders.json', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            alert('Excel file exported successfully on the server!');
+        } else {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Failed to export Excel file.');
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error exporting to Excel: ' + error.message);
+    });
+}
+
 </script>
 
 </body>
