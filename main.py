@@ -16,6 +16,7 @@ user_carts = {}
 user_payment_methods = {}
 user_phone_numbers = {}
 ORDERS_FILE = 'data\\orders.json'
+INVOICE_NUMBER_COUNTER = 1000  # Start from any number you like
 
 
 
@@ -203,6 +204,8 @@ def get_user_profile(user_id):
 
 
 def finalize_order(recipient_id):
+    global INVOICE_NUMBER_COUNTER  # To modify the global counter
+
     phone_number = user_phone_numbers.get(recipient_id, "Unknown")
     payment_method = user_payment_methods.get(recipient_id, "Unknown")
 
@@ -218,20 +221,25 @@ def finalize_order(recipient_id):
     customer_name = user_profile["name"]
     profile_pic = user_profile["profile_pic"]
 
+    # Generate invoice number
+    invoice_number = INVOICE_NUMBER_COUNTER
+    INVOICE_NUMBER_COUNTER += 1  # Increment for the next order
+
     # Order summary message
     cart_summary = "\n".join([f"{item['title']}: {item['price']} BDT" for item in user_carts.get(recipient_id)])
     send_message(recipient_id, {
-        "text": f"Order Summary:\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nPayment Method: {payment_method}\nThank you for your purchase, {customer_name}! Your order has been confirmed!"
+        "text": f"Order Summary:\nInvoice No: {invoice_number}\n{cart_summary}\nTotal: {total_price} BDT\nPhone: {phone_number}\nPayment Method: {payment_method}\nThank you for your purchase, {customer_name}! Your order has been confirmed!"
     })
 
     # Order data
     order_data = {
+        "invoice_number": invoice_number,  # Add invoice number here
         "customer_id": recipient_id,
         "customer_name": customer_name,
         "profile_pic": profile_pic,
         "phone_number": phone_number,
-        "payment_method": payment_method,  # Make sure the payment method is included here
-        "order_status" : "pending",
+        "payment_method": payment_method,
+        "order_status": "pending",
         "cart_items": cart_items,
         "total_price": total_price
     }
@@ -242,7 +250,7 @@ def finalize_order(recipient_id):
 
     # Save updated orders
     save_json(ORDERS_FILE, orders)
-    print(f"Order saved for user {recipient_id}")
+    print(f"Order saved for user {recipient_id} with invoice {invoice_number}")
 
     # Reset payment method and cart data
     user_payment_methods.pop(recipient_id, None)
