@@ -1,117 +1,12 @@
 [
   {
-    "invoice_number": 1000,
-    "customer_id": "7999790108967827",
-    "customer_name": "Customer 1",
-    "profile_pic": "https://robohash.org/2306.png",
-    "phone_number": "01778883715",
-    "payment_method": "Nagad",
-    "order_status": "on-hold",
-    "cart_items": [
-      {
-        "title": "Minecraft Bundle",
-        "price": 697
-      },
-      {
-        "title": "GTA FIVE",
-        "price": 2930
-      }
-    ],
-    "total_price": 3467,
-    "order_date": "2024-11-13 11:20:00.958124"
-  },
-  {
-    "invoice_number": 1001,
-    "customer_id": "9332870009684331",
-    "customer_name": "Customer 2",
-    "profile_pic": "https://robohash.org/6463.png",
-    "phone_number": "01775505370",
-    "payment_method": "Bkash",
-    "order_status": "refunded",
-    "cart_items": [
-      {
-        "title": "Minecraft Bundle",
-        "price": 829
-      },
-      {
-        "title": "GTA FIVE",
-        "price": 1847
-      }
-    ],
-    "total_price": 2462,
-    "order_date": "2024-11-13 11:20:00.958151"
-  },
-  {
-    "invoice_number": 1002,
-    "customer_id": "8298663226073507",
-    "customer_name": "Customer 3",
-    "profile_pic": "https://robohash.org/4173.png",
-    "phone_number": "01778931307",
-    "payment_method": "Bkash",
-    "order_status": "on-hold",
-    "cart_items": [
-      {
-        "title": "Minecraft Bundle",
-        "price": 726
-      },
-      {
-        "title": "GTA FIVE",
-        "price": 1925
-      }
-    ],
-    "total_price": 2116,
-    "order_date": "2024-11-13 11:20:00.958162"
-  },
-  {
-    "invoice_number": 1003,
-    "customer_id": "7604250873700897",
-    "customer_name": "Customer 4",
-    "profile_pic": "https://robohash.org/3397.png",
-    "phone_number": "01779779521",
-    "payment_method": "Nagad",
-    "order_status": "cancelled",
-    "cart_items": [
-      {
-        "title": "Minecraft Bundle",
-        "price": 851
-      },
-      {
-        "title": "GTA FIVE",
-        "price": 1073
-      }
-    ],
-    "total_price": 3919,
-    "order_date": "2024-11-13 11:20:00.958171"
-  },
-  {
-    "invoice_number": 1004,
-    "customer_id": "7232457141460634",
-    "customer_name": "Customer 5",
-    "profile_pic": "https://robohash.org/4566.png",
-    "phone_number": "01778603628",
-    "payment_method": "Bkash",
-    "order_status": "refunded",
-    "cart_items": [
-      {
-        "title": "Minecraft Bundle",
-        "price": 595
-      },
-      {
-        "title": "GTA FIVE",
-        "price": 1487
-      }
-    ],
-    "total_price": 3824,
-    "order_date": "2024-11-13 11:20:00.958180"
-  },
-  {
     "invoice_number": 1007,
     "customer_id": "8444781382300594",
     "customer_name": "Hitoshi Nakamoto",
     "profile_pic": "https://platform-lookaside.fbsbx.com/platform/profilepic/?eai=AXHlGB6UUnw1rWhTPJL_IjxpbRaYjh05kkH5-xVlLSir5H5nbShVPNmUY6uQgJEppXM5z5YMICb_&psid=8444781382300594&width=1024&ext=1734089194&hash=AbbInuy96eCklZ-1rVu2wLIx",
     "phone_number": "01779066926",
     "payment_method": "Bkash",
-    "order_status": "on-hold",
+    "order_status": "pending",
     "cart_items": [
       {
         "title": "MCPE Family",
@@ -128,7 +23,7 @@
     "profile_pic": "https://platform-lookaside.fbsbx.com/platform/profilepic/?eai=AXGEuCS3AOOxviHNhm85YaAJIpcpbO6cz502NFRtZYwCEseiqtWZKPH42wo_TXsuQMcN0D-xAJz_&psid=8444781382300594&width=1024&ext=1734089936&hash=AbY1O3zhFlSIugsa599cZvHz",
     "phone_number": "01779066926",
     "payment_method": "Bkash",
-    "order_status": "failed",
+    "order_status": "pending",
     "cart_items": [
       {
         "title": "GTA FIVE",
