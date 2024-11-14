@@ -294,6 +294,55 @@ def save_order(recipient_id):
     print(f"Order saved for user {recipient_id}")
 
 
+
+def find_product_by_name_or_code(user_message):
+    user_message = user_message.lower()
+
+    # Check for exact or partial matches in product titles or codes
+    for product in products:
+        product_title = product["title"].lower()
+        product_code = product["code"].lower()
+
+        # Check if the product title or code is in the user message
+        if product_title in user_message or product_code in user_message:
+            return product
+
+    # Use difflib for fuzzy matching if no exact match is found
+    best_match = None
+    best_score = 0
+    for product in products:
+        score = max(
+            match_score(user_message, product["title"].lower()),
+            match_score(user_message, product["code"].lower())
+        )
+        if score > best_score:
+            best_score = score
+            best_match = product
+
+    # Return the best match if the score is above a threshold (e.g., 0.5)
+    return best_match if best_score >= 0.5 else None
+
+
+
+
+def send_product_details(recipient_id, product):
+    element = {
+        "title": product["title"],
+        "image_url": product["image_url"],
+        "subtitle": f"Price: {product['price']} BDT\n{product['details']}",
+        "buttons": [
+            {"type": "postback", "title": "Add to Cart", "payload": f"ADD_TO_CART_{product['code']}"},
+            {"type": "postback", "title": "Details", "payload": f"DETAILS_{product['code']}"},
+            {"type": "web_url", "title": "View on Web", "url": product["web_url"]}
+        ]
+    }
+    send_generic_message(recipient_id, [element])
+
+
+
+
+
+
 @app.route('/', methods=['GET', 'POST'])
 def webhook():
     if request.method == 'GET':
@@ -303,27 +352,36 @@ def webhook():
         return "Invalid verification token", 403
 
     data = request.json
+    if 'entry' not in data:
+        return "No entry found", 400
+
     for entry in data['entry']:
-        messaging_events = entry['messaging']
+        messaging_events = entry.get('messaging', [])
         for messaging_event in messaging_events:
             sender_id = messaging_event['sender']['id']
 
             # Handle text messages
             if 'message' in messaging_event:
-                message_text = messaging_event['message'].get('text', '').lower()
+                message_text = messaging_event['message'].get('text', '').strip()
 
                 # Detect phone number
                 if message_text.isdigit() and len(message_text) == 11:
                     user_phone_numbers[sender_id] = message_text
                     finalize_order(sender_id)
-                elif message_text == "start":
+                elif message_text.lower() == "start" or "product" or "item":
                     display_products(sender_id)
                 else:
-                    response = find_best_response(message_text)
-                    send_message(sender_id, {"text": response or "I'm sorry, I didn't understand that."})
+                    # Check if the message matches a product title or code
+                    product = find_product_by_name_or_code(message_text)
+                    if product:
+                        send_product_details(sender_id, product)
+                    else:
+                        # Fallback to finding the best response
+                        response = find_best_response(message_text)
+                        send_message(sender_id, {"text": response or "I'm sorry, I didn't understand that."})
 
             # Handle postbacks
-            if 'postback' in messaging_event:
+            elif 'postback' in messaging_event:
                 payload = messaging_event['postback']['payload']
 
                 # Routing based on postback payload
@@ -344,10 +402,11 @@ def webhook():
                 elif payload in ["PAYMENT_BKASH", "PAYMENT_NAGAD"]:
                     handle_payment_method(sender_id, payload)
                 elif payload == "PAYMENT_COD":
-                    user_payment_methods[sender_id] = "Cash on Delivery"
-                    send_message(sender_id, {"text": "Please provide your phone number to confirm the order."})
+                    handle_payment_method(sender_id, payload)
 
     return "EVENT_RECEIVED", 200
+
+
 
 
 if __name__ == '__main__':
