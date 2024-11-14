@@ -368,7 +368,7 @@ def webhook():
                 if message_text.isdigit() and len(message_text) == 11:
                     user_phone_numbers[sender_id] = message_text
                     finalize_order(sender_id)
-                elif message_text.lower() == "start" or "product" or "item":
+                elif message_text.lower() == "start":
                     display_products(sender_id)
                 else:
                     # Check if the message matches a product title or code
