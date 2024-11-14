@@ -340,6 +340,32 @@ def send_product_details(recipient_id, product):
 
 
 
+import os
+
+def save_image(image_url, sender_id):
+    try:
+        # Ensure the directory exists
+        save_directory = "data/images/temporary"
+        os.makedirs(save_directory, exist_ok=True)
+
+        # Create a unique filename using timestamp
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = f"{save_directory}/{sender_id}_{timestamp}.png"
+
+        # Download the image
+        response = requests.get(image_url)
+        if response.status_code == 200:
+            with open(filename, 'wb') as image_file:
+                image_file.write(response.content)
+            print(f"Image saved as {filename}")
+            send_message(sender_id, {"text": "Image received and saved successfully!"})
+        else:
+            print(f"Failed to download image: {response.status_code}")
+            send_message(sender_id, {"text": "Failed to save the image. Please try again."})
+
+    except Exception as e:
+        print(f"Error saving image: {str(e)}")
+        send_message(sender_id, {"text": "An error occurred while saving the image."})
 
 
 
@@ -379,6 +405,14 @@ def webhook():
                         # Fallback to finding the best response
                         response = find_best_response(message_text)
                         send_message(sender_id, {"text": response or "I'm sorry, I didn't understand that."})
+
+            # Handle image attachments
+            if 'message' in messaging_event and 'attachments' in messaging_event['message']:
+                attachments = messaging_event['message']['attachments']
+                for attachment in attachments:
+                    if attachment['type'] == 'image':
+                        image_url = attachment['payload']['url']
+                        save_image(image_url, sender_id)
 
             # Handle postbacks
             elif 'postback' in messaging_event:
